@@ -171,14 +171,14 @@ export default class extends HTMLElement {
 
 		const nameContainer = this.shadowRoot.querySelector('foreignObject');
 		const containRect = nameContainer.getBoundingClientRect();
-		const containBBox = nameContainer.getBBox();
-		const scaleFactor = containRect.width / containBBox.width;
+		const scaleFactor = containRect.width / this.#rect.width;
 
 		const nameTagRect = this.shadowRoot.getElementById('name').getBoundingClientRect();
 		const nameTagWidth = nameTagRect.width / scaleFactor;
 		const nameTagHeight = nameTagRect.height / scaleFactor;
-		tmpl.insertAdjacentHTML('beforeend', `<rect fill="#0a0a0a" opacity="0.8" width="${nameTagWidth}" height="${nameTagHeight}" x="${(this.#rect.width - nameTagWidth) / 2}" y="${containBBox.y}" rx="4" />`);
-		tmpl.insertAdjacentHTML('beforeend', `<text class="font-system" fill="#fff" font-size="12px" text-anchor="middle" dominant-baseline="hanging" x="${this.#rect.width / 2}" y="${containBBox.y + 4}">${this.getAttribute('name')}</text>
+		const nameTagYPos = 74;
+		tmpl.insertAdjacentHTML('beforeend', `<rect fill="#0a0a0a" opacity="0.8" width="${nameTagWidth}" height="${nameTagHeight}" x="${(this.#rect.width - nameTagWidth) / 2}" y="${nameTagYPos}" rx="4" />`);
+		tmpl.insertAdjacentHTML('beforeend', `<text class="font-system" fill="#fff" font-size="12px" text-anchor="middle" dominant-baseline="hanging" x="${this.#rect.width / 2}" y="${nameTagYPos + 4}">${this.getAttribute('name')}</text>
 		`);
 
 		if (this.hasAttribute('guild') && this.shadowRoot.getElementById('guildname')) {
@@ -186,7 +186,7 @@ export default class extends HTMLElement {
 			const guildTagWidth = guildTagRect.width / scaleFactor;
 			const guildTagHeight = guildTagRect.height / scaleFactor;
 			const guildTagXPos = (this.#rect.width - guildTagWidth) / 2;
-			const guildTagYPos = nameTagHeight + containBBox.y + 1;
+			const guildTagYPos = nameTagHeight + nameTagYPos + 1;
 			tmpl.insertAdjacentHTML('beforeend', `<rect fill="#0a0a0a" opacity="0.8" width="${guildTagWidth}" height="${guildTagHeight}" x="${guildTagXPos}" y="${guildTagYPos}" rx="4" />`);
 			tmpl.insertAdjacentHTML('beforeend', `<text class="font-system" fill="#fff" font-size="12px" text-anchor="middle" font-weight="700" dominant-baseline="hanging" x="${this.#rect.width / 2}" y="${guildTagYPos + 4}">${this.getAttribute('guild')}</text>`);
 
