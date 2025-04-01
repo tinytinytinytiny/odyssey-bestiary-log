@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width">
+		<style>
+			@font-face {
+				font-family: 'Dosis';
+				font-weight: 600;
+				src: url('fonts/dosis-600.woff2') format('woff2');
+			}
+
+			@font-face {
+				font-family: 'Dosis';
+				font-weight: 700;
+				src: url('fonts/dosis-700.woff2') format('woff2');
+			}
+
+			bestiary-log {
+				margin: auto;
+			}
+
+			.buttons {
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="buttons">
+			<button id="copy">Copy Image</button>
+			<button id="save">Save Image</button>
+		</div>
+		<bestiary-log bgsrc="images/bestiary.Ludibrium.1.png" name="Buffoon" level="74" mobsrc="images/6300100.gif"
+			hp="16000" mp="0" exp="740" mesos="5225627" kills="18383">
+			<bestiary-pc slot="character" name="tiny" charactersrc="images/characters.gif" guild="Odyssey"
+				emblemsrc="images/Mark.Animal.00002006.4.png"
+				emblembgsrc="images/BackGround.00001002.3.png"></bestiary-pc>
+			<bestiary-item slot="item" name="Gold Ore" src="images/3100006.png" quantity="56"></bestiary-item>
+		</bestiary-log>
+
+		<script type="module">
+			import BestiaryLog from './BestiaryLog.mjs';
+			import BestiaryCharacter from './BestiaryCharacter.mjs';
+			import BestiaryItem from './BestiaryItem.mjs';
+
+			customElements.define('bestiary-log', BestiaryLog);
+			customElements.define('bestiary-pc', BestiaryCharacter);
+			customElements.define('bestiary-item', BestiaryItem);
+
+			document.getElementById('copy').addEventListener('click', () => {
+				document.querySelector('bestiary-log').copyImage();
+			});
+
+			document.getElementById('save').addEventListener('click', () => {
+				document.querySelector('bestiary-log').saveImage();
+			});
+		</script>
+	</body>
+</html>
