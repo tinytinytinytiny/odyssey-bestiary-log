@@ -73,7 +73,7 @@ export default class extends HTMLElement {
 		`);
 		shadow.adoptedStyleSheets = [...shadow.adoptedStyleSheets, shadowRootSheet];
 		shadow.innerHTML = `
-			<svg id="root" viewBox="0 0 ${this.#rect.width} ${this.#rect.height}" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+			<svg class="root" viewBox="0 0 ${this.#rect.width} ${this.#rect.height}" xmlns="http://www.w3.org/2000/svg" overflow="visible">
 				<style>
 					.font-system {
 						font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji';
@@ -200,7 +200,7 @@ export default class extends HTMLElement {
 			}
 		}
 
-		const svgClone = this.shadowRoot.getElementById('root').cloneNode(true);
+		const svgClone = this.shadowRoot.querySelector('.root').cloneNode(true);
 		const foreignObject = svgClone.querySelector('foreignObject');
 		svgClone.replaceChild(tmpl, foreignObject);
 		svgClone.removeAttribute('id');

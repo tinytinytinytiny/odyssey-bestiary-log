@@ -26,7 +26,7 @@ export default class extends HTMLElement {
 		`);
 		shadow.adoptedStyleSheets = [...shadow.adoptedStyleSheets, shadowRootSheet];
 		shadow.innerHTML = `
-			<svg id="root" viewBox="0 0 ${this.#rect.width} ${this.#rect.height}" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+			<svg class="root" viewBox="0 0 ${this.#rect.width} ${this.#rect.height}" xmlns="http://www.w3.org/2000/svg" overflow="visible">
 				<style>
 					text {
 						font-family: var(--bestiary-font-family, 'Dosis'), 'Dosis', sans-serif;
@@ -141,7 +141,7 @@ export default class extends HTMLElement {
 	}
 
 	createUntaintedElement() {
-		const svgClone = this.shadowRoot.getElementById('root').cloneNode(true);
+		const svgClone = this.shadowRoot.querySelector('.root').cloneNode(true);
 		svgClone.removeAttribute('id');
 		svgClone.querySelectorAll('[id]:not(filter)').forEach((x) => x.removeAttribute('id'));
 		return svgClone;

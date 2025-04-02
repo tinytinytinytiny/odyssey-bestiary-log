@@ -84,7 +84,7 @@ export default class extends HTMLElement {
 					max-width: 100%;
 				}
 			</style>
-			<svg id="root" viewBox="0 0 485 639" xmlns="http://www.w3.org/2000/svg">
+			<svg class="root" viewBox="0 0 485 639" xmlns="http://www.w3.org/2000/svg">
 				<style>
 					text {
 						font-family: var(--bestiary-font-family, 'Dosis'), 'Dosis', sans-serif;
@@ -283,7 +283,7 @@ export default class extends HTMLElement {
 	}
 
 	async #makeImage() {
-		const svgClone = this.shadowRoot.getElementById('root').cloneNode(true);
+		const svgClone = this.shadowRoot.querySelector('.root').cloneNode(true);
 		this.shadowRoot.querySelectorAll('slot').forEach((slot) => {
 			const [component] = slot.assignedElements();
 			const foreignObject = svgClone.querySelector(`slot[name="${component.slot}"]`).parentNode;
@@ -297,52 +297,57 @@ export default class extends HTMLElement {
 			svgClone.replaceChild(untaintedSVG, foreignObject);
 		});
 
+		const convertImagesToBase64 = []; // array of promises
 		const images = svgClone.querySelectorAll('image');
 		for (const i in images) {
 			if (Object.prototype.hasOwnProperty.call(images, i)) {
-				const dataURL = await getBase64(images[i].getAttribute('href'));
-				images[i].setAttribute('href', dataURL);
+				convertImagesToBase64.push(
+					getBase64(images[i].getAttribute('href'))
+						.then((dataURL) => images[i].setAttribute('href', dataURL))
+				);
 			}
 		}
+		await Promise.all(convertImagesToBase64);
 
-		const svgStyle = svgClone.querySelector('style');
 		if (!this.#fontFaceRules) {
 			const fontFamilyCSSVariable = window.getComputedStyle(this).getPropertyValue('--bestiary-font-family');
 			const getFontFaceRules = (sheet) => {
 				// returns array of @font-face rules in the stylesheet
 				return Promise.allSettled([...sheet.cssRules]
 					.filter(rule => rule.constructor.name === 'CSSFontFaceRule')
-					.map(async (rule) => {
-						const fontFamily = rule.style.fontFamily;
+					.map((rule) => {
+						const fontFamily = rule.style.getPropertyValue('font-family');
 						const isUserDefinedFont = Boolean(
 							fontFamily === fontFamilyCSSVariable.replace(/\'\"/g, '') || fontFamily === 'Dosis'
 						);
 						if (fontFamilyCSSVariable && !isUserDefinedFont) {
 							return '';
 						}
-						const fontWeight = rule.style.fontWeight;
-						const fontUrl = rule.style.src.match(/(?<=url\([\"\'])([^\)]*)(?=[\"\'])/g);
-						const fontFormat = rule.style.src.match(/(?<=format\([\"\'])([^\)]*)(?=[\"\'])/g);
-						try {
-							const fontDataURL = await getBase64(fontUrl);
-							const fontSrc = (fontFormat) ? `url('${fontDataURL}') format('${fontFormat}')` : `url('${fontDataURL}')`;
-							return `@font-face {
-								font-family: '${fontFamily}';
-								font-weight: ${fontWeight};
-								src: ${fontSrc};
-							}`.replace(/[\t\n]/g, '');
-						} catch {
-							return '';
-						}
+						const fontWeight = rule.style.getPropertyValue('font-weight');
+						const fontUrl = rule.style.getPropertyValue('src').match(/(?<=url\([\"\'])([^\)]*)(?=[\"\'])/g);
+						const fontFormat = rule.style.getPropertyValue('src').match(/(?<=format\([\"\'])([^\)]*)(?=[\"\'])/g);
+						return getBase64(fontUrl)
+							.then((dataURL) => {
+								if (!dataURL) return '';
+								const fontSrc = (fontFormat) ? `url('${dataURL}') format('${fontFormat}')` : `url('${dataURL}')`;
+								return `@font-face {
+									font-family: ${fontFamily};
+									font-weight: ${fontWeight};
+									src: ${fontSrc};
+								}`.replace(/[\t\n]/g, '');
+							}).catch(() => '');
 					}))
 					.then((results) => results.map(result => result.value));
 			};
-			const fontFaceRules = [...document.styleSheets].reduce(async (prev, curr) => {
-				const rule = await getFontFaceRules(curr);
-				return prev + rule.join('');
-			}, '');
+			const convertFontsToBase64 = [...document.styleSheets].reduce((a, b) => [...a, getFontFaceRules(b)], []);
+			const fontFaceRules = Promise.allSettled(convertFontsToBase64)
+				.then((results) => {
+					return results.map(result => result.value).join('');
+				});
 			this.#fontFaceRules = await fontFaceRules;
 		}
+
+		const svgStyle = svgClone.querySelector('style');
 		svgStyle.insertAdjacentHTML('afterbegin', this.#fontFaceRules);
 		[...this.shadowRoot.adoptedStyleSheets].forEach((sheet) => {
 			for (let i = 0; i < sheet.cssRules.length; i++) {
@@ -351,25 +356,30 @@ export default class extends HTMLElement {
 			}
 		});
 
-		const svg = svgClone.outerHTML;
-		const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+		const blob = new Blob([svgClone.outerHTML], { type: 'image/svg+xml' });
+		const objectURL = URL.createObjectURL(blob);
 		const img = new Image();
-		img.src = URL.createObjectURL(blob);
+		img.src = objectURL;
 
-		return img.decode().then(() => {
-			const canvas = document.createElement('canvas');
-			canvas.width = 485;
-			canvas.height = 639;
-			const context = canvas.getContext('2d');
-			context.drawImage(img, 0, 0, 485, 639);
-			return canvas;
+		return new Promise((resolve) => {
+			img.decode().then(() => {
+				const canvas = document.createElement('canvas');
+				canvas.width = 485;
+				canvas.height = 639;
+				const context = canvas.getContext('2d');
+				requestAnimationFrame(() => {
+					context.drawImage(img, 0, 0, 485, 639);
+					URL.revokeObjectURL(objectURL);
+					resolve(canvas);
+				});
+			});
 		});
 	}
 
 	async saveImage() {
 		const snapshot = await this.#makeImage();
 		const a = document.createElement('a');
-		a.download = `${this.getAttribute('name').toLowerCase()}-${new Date().getTime()}.png`;
+		a.download = `${new Date().getTime()}.png`;
 		a.style.opacity = '0';
 		a.style.position = 'absolute';
 		a.href = snapshot.toDataURL();
@@ -378,14 +388,14 @@ export default class extends HTMLElement {
 	}
 
 	async copyImage() {
-		const snapshot = await this.#makeImage();
-		snapshot.toBlob(async (blob) => {
-			await navigator.clipboard.write([
-				new ClipboardItem({
-					'image/png': blob
-				})
-			]);
-			console.log('Image copied');
-		});
+		const makeBlob = async () => {
+			const snapshot = await this.#makeImage();
+			return new Promise((resolve) => {
+				return snapshot.toBlob(resolve);
+			});
+		};
+		const clipboardItem = new ClipboardItem({ 'image/png': makeBlob() });
+		navigator.clipboard.write([clipboardItem], { type: 'image/png' })
+			.then(() => console.log('Image copied'));
 	}
 }

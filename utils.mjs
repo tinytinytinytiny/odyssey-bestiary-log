@@ -13,7 +13,7 @@ export function getBase64(url) {
 		.then((blob) => {
 			return new Promise((resolve, reject) => {
 				const reader = new FileReader();
-				reader.onloadend = function () {
+				reader.onload = () => {
 					resolve(reader.result);
 				};
 				reader.onerror = reject;
