@@ -297,7 +297,7 @@ export default class extends HTMLElement {
 			svgClone.replaceChild(untaintedSVG, foreignObject);
 		});
 
-		const convertImagesToBase64 = []; // array of promises
+		const base64Images = []; // array of promises
 		const images = svgClone.querySelectorAll('image');
 		for (const i in images) {
 			if (Object.prototype.hasOwnProperty.call(images, i)) {
@@ -307,7 +307,7 @@ export default class extends HTMLElement {
 				);
 			}
 		}
-		await Promise.all(convertImagesToBase64);
+		await Promise.all(base64Images);
 
 		if (!this.#fontFaceRules) {
 			const fontFamilyCSSVariable = window.getComputedStyle(this).getPropertyValue('--bestiary-font-family');
@@ -329,7 +329,9 @@ export default class extends HTMLElement {
 						return getBase64(fontUrl)
 							.then((dataURL) => {
 								if (!dataURL) return '';
-								const fontSrc = (fontFormat) ? `url('${dataURL}') format('${fontFormat}')` : `url('${dataURL}')`;
+								const fontSrc = (fontFormat) ?
+									`url('${dataURL}') format('${fontFormat}')` :
+									`url('${dataURL}')`;
 								return `@font-face {
 									font-family: ${fontFamily};
 									font-weight: ${fontWeight};
@@ -339,11 +341,14 @@ export default class extends HTMLElement {
 					}))
 					.then((results) => results.map(result => result.value));
 			};
-			const convertFontsToBase64 = [...document.styleSheets].reduce((a, b) => [...a, getFontFaceRules(b)], []);
-			const fontFaceRules = Promise.allSettled(convertFontsToBase64)
-				.then((results) => {
-					return results.map(result => result.value).join('');
-				});
+			const fontFaceRules = Promise.allSettled(
+				[...document.styleSheets]
+					.reduce((a, b) => [...a, getFontFaceRules(b)], [])
+			).then((results) => {
+				return results
+					.map(result => result.value)
+					.join('');
+			});
 			this.#fontFaceRules = await fontFaceRules;
 		}
 

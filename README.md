@@ -1,0 +1,1 @@
+https://tinytinytinytiny.github.io/odyssey-bestiary-log/
