@@ -1,0 +1,19 @@
+{
+	"javascript": {
+		"formatter": {
+			"lineWidth": 120,
+			"quoteStyle": "single",
+			"trailingCommas": "none"
+		}
+	},
+	"linter": {
+		"rules": {
+			"complexity": {
+				"noForEach": "off"
+			},
+			"style": {
+				"useTemplate": "off"
+			}
+		}
+	}
+}

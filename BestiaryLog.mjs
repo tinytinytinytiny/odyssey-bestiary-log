@@ -1,17 +1,7 @@
 import { calcCenter, getBase64 } from './utils.mjs';
 
 export default class extends HTMLElement {
-	static observedAttributes = [
-		'bgsrc',
-		'name',
-		'level',
-		'mobsrc',
-		'hp',
-		'mp',
-		'exp',
-		'mesos',
-		'kills'
-	];
+	static observedAttributes = ['bgsrc', 'name', 'level', 'mobsrc', 'hp', 'mp', 'exp', 'mesos', 'kills'];
 
 	#rects = {
 		bg: {
@@ -211,29 +201,36 @@ export default class extends HTMLElement {
 	attributeChangedCallback(name, _, newValue) {
 		switch (name) {
 			case 'bgsrc':
-				this.shadowRoot.getElementById('bg').innerHTML = `<image href="${newValue}" width="${this.#rects.bg.width}" height="${this.#rects.bg.height}" x="${this.#rects.bg.x}" y="${this.#rects.bg.y}" />`;
+				this.shadowRoot.getElementById('bg').innerHTML =
+					`<image href="${newValue}" width="${this.#rects.bg.width}" height="${this.#rects.bg.height}" x="${this.#rects.bg.x}" y="${this.#rects.bg.y}" />`;
 				break;
 			case 'name':
 				this.shadowRoot.getElementById('name').textContent = newValue.toUpperCase();
 				break;
-			case 'mobsrc':
+			case 'mobsrc': {
 				const mobImg = new Image();
 				mobImg.src = newValue;
 				mobImg.decode().then(() => {
 					const scaleFactor = Math.min(1, this.#rects.monsterFrame.height / mobImg.height);
 					const imgHeight = Math.min(this.#rects.monsterFrame.height, mobImg.height);
 					const imgWidth = Math.round(mobImg.width * scaleFactor);
-					this.shadowRoot.getElementById('mob').innerHTML = `<image href="${newValue}" width="${imgWidth}" height="${imgHeight}" x="${calcCenter(this.#rects.monsterFrame.width, imgWidth) + this.#rects.monsterFrame.x}" y="${calcCenter(this.#rects.monsterFrame.height, imgHeight) + this.#rects.monsterFrame.y}" />`;
+					this.shadowRoot.getElementById('mob').innerHTML =
+						`<image href="${newValue}" width="${imgWidth}" height="${imgHeight}" x="${calcCenter(this.#rects.monsterFrame.width, imgWidth) + this.#rects.monsterFrame.x}" y="${calcCenter(this.#rects.monsterFrame.height, imgHeight) + this.#rects.monsterFrame.y}" />`;
 				});
 				break;
-			case 'level':
-				const int = Math.abs(parseInt(newValue));
-				if (typeof int === 'number' && !isNaN(int)) {
+			}
+			case 'level': {
+				const int = Math.abs(Number.parseInt(newValue));
+				if (typeof int === 'number' && !Number.isNaN(int)) {
 					const digits = int.toString().split('');
-					const digitImgs = digits.map((n, index) =>
-						`<image href="ui-assets/LevelNo.${n}.png" width="11" height="13" x="${391 + index * 12}" y="18" />`);
+					const digitImgs = digits.map(
+						(n, index) =>
+							`<image href="ui-assets/LevelNo.${n}.png" width="11" height="13" x="${391 + index * 12}" y="18" />`
+					);
 					this.shadowRoot.getElementById('level').innerHTML = digitImgs.join('');
 				}
+				break;
+			}
 			case 'hp':
 				this.#setBarValue('hp', newValue);
 				break;
@@ -244,10 +241,14 @@ export default class extends HTMLElement {
 				this.#setBarValue('exp', newValue);
 				break;
 			case 'mesos':
-				this.shadowRoot.getElementById('meso-count').textContent = new Intl.NumberFormat().format(parseInt(newValue));
+				this.shadowRoot.getElementById('meso-count').textContent = new Intl.NumberFormat().format(
+					Number.parseInt(newValue)
+				);
 				break;
 			case 'kills':
-				this.shadowRoot.getElementById('kill-count').textContent = new Intl.NumberFormat().format(parseInt(newValue));
+				this.shadowRoot.getElementById('kill-count').textContent = new Intl.NumberFormat().format(
+					Number.parseInt(newValue)
+				);
 				break;
 			default:
 				break;
@@ -258,7 +259,7 @@ export default class extends HTMLElement {
 
 	#updateStyles() {
 		const starsSheet = new CSSStyleSheet();
-		const stars = 1 + Math.min(Math.floor(Math.abs(parseInt(this.getAttribute('level'))) / 10), 14);
+		const stars = 1 + Math.min(Math.floor(Math.abs(Number.parseInt(this.getAttribute('level'))) / 10), 14);
 		starsSheet.replaceSync(`
 			#stars > :nth-child(${stars}) ~ * {
 				opacity: 0.25;
@@ -268,14 +269,14 @@ export default class extends HTMLElement {
 	}
 
 	#setBarValue(type, value) {
-		const int = Math.abs(parseInt(value));
+		const int = Math.abs(Number.parseInt(value));
 		const gap = 1;
-		if (typeof int === 'number' && !isNaN(int)) {
+		if (typeof int === 'number' && !Number.isNaN(int)) {
 			const digits = int.toString().split('');
-			const digitWidths = digits.map(n => (n === '1') ? 5 : 8);
+			const digitWidths = digits.map((n) => (n === '1' ? 5 : 8));
 			const totalWidth = digitWidths.reduce((prev, curr) => prev + curr + gap, 0);
 			const digitImgs = digits.map((n, index) => {
-				const xOffset = (index > 0) ? digitWidths.slice(0, index).reduce((prev, curr) => prev + curr + gap, 0) : 0;
+				const xOffset = index > 0 ? digitWidths.slice(0, index).reduce((prev, curr) => prev + curr + gap, 0) : 0;
 				return `<image href="ui-assets/ItemNo.${n}.png" width="${digitWidths[index]}" height="11" x="${calcCenter(this.#rects[`${type}Bar`].width, totalWidth) + this.#rects[`${type}Bar`].x + xOffset}" y="275" />`;
 			});
 			this.shadowRoot.getElementById(type).innerHTML = digitImgs.join('');
@@ -289,9 +290,7 @@ export default class extends HTMLElement {
 			const foreignObject = svgClone.querySelector(`slot[name="${component.slot}"]`).parentNode;
 			const untaintedSVG = component.createUntaintedElement();
 			const cloneAttributes = (...attributes) => {
-				attributes.forEach((attribute) =>
-					untaintedSVG.setAttribute(attribute, foreignObject.getAttribute(attribute))
-				);
+				attributes.forEach((attribute) => untaintedSVG.setAttribute(attribute, foreignObject.getAttribute(attribute)));
 			};
 			cloneAttributes('width', 'height', 'x', 'y');
 			svgClone.replaceChild(untaintedSVG, foreignObject);
@@ -301,9 +300,8 @@ export default class extends HTMLElement {
 		const images = svgClone.querySelectorAll('image');
 		for (const i in images) {
 			if (Object.prototype.hasOwnProperty.call(images, i)) {
-				convertImagesToBase64.push(
-					getBase64(images[i].getAttribute('href'))
-						.then((dataURL) => images[i].setAttribute('href', dataURL))
+				base64Images.push(
+					getBase64(images[i].getAttribute('href')).then((dataURL) => images[i].setAttribute('href', dataURL))
 				);
 			}
 		}
@@ -313,41 +311,41 @@ export default class extends HTMLElement {
 			const fontFamilyCSSVariable = window.getComputedStyle(this).getPropertyValue('--bestiary-font-family');
 			const getFontFaceRules = (sheet) => {
 				// returns array of @font-face rules in the stylesheet
-				return Promise.allSettled([...sheet.cssRules]
-					.filter(rule => rule.constructor.name === 'CSSFontFaceRule')
-					.map((rule) => {
-						const fontFamily = rule.style.getPropertyValue('font-family');
-						const isUserDefinedFont = Boolean(
-							fontFamily === fontFamilyCSSVariable.replace(/\'\"/g, '') || fontFamily === 'Dosis'
-						);
-						if (fontFamilyCSSVariable && !isUserDefinedFont) {
-							return '';
-						}
-						const fontWeight = rule.style.getPropertyValue('font-weight');
-						const fontUrl = rule.style.getPropertyValue('src').match(/(?<=url\([\"\'])([^\)]*)(?=[\"\'])/g);
-						const fontFormat = rule.style.getPropertyValue('src').match(/(?<=format\([\"\'])([^\)]*)(?=[\"\'])/g);
-						return getBase64(fontUrl)
-							.then((dataURL) => {
-								if (!dataURL) return '';
-								const fontSrc = (fontFormat) ?
-									`url('${dataURL}') format('${fontFormat}')` :
-									`url('${dataURL}')`;
-								return `@font-face {
+				return Promise.allSettled(
+					[...sheet.cssRules]
+						.filter((rule) => rule.constructor.name === 'CSSFontFaceRule')
+						.map((rule) => {
+							const fontFamily = rule.style.getPropertyValue('font-family');
+							const isUserDefinedFont = Boolean(
+								fontFamily === fontFamilyCSSVariable.replace(/\'\"/g, '') || fontFamily === 'Dosis'
+							);
+							if (fontFamilyCSSVariable && !isUserDefinedFont) {
+								return '';
+							}
+							const fontWeight = rule.style.getPropertyValue('font-weight');
+							const fontUrl = rule.style.getPropertyValue('src').match(/(?<=url\([\"\'])([^\)]*)(?=[\"\'])/g);
+							const fontFormat = rule.style.getPropertyValue('src').match(/(?<=format\([\"\'])([^\)]*)(?=[\"\'])/g);
+							return getBase64(fontUrl)
+								.then((dataURL) => {
+									if (!dataURL) return '';
+									const fontSrc = fontFormat ? `url('${dataURL}') format('${fontFormat}')` : `url('${dataURL}')`;
+									return `@font-face {
 									font-family: ${fontFamily};
 									font-weight: ${fontWeight};
 									src: ${fontSrc};
 								}`.replace(/[\t\n]/g, '');
-							}).catch(() => '');
-					}))
-					.then((results) => results.map(result => result.value));
+								})
+								.catch(() => '');
+						})
+				).then((results) => results.map((result) => result.value));
 			};
 			const fontFaceRules = Promise.allSettled(
-				[...document.styleSheets]
-					.reduce((a, b) => [...a, getFontFaceRules(b)], [])
+				[...document.styleSheets].reduce((a, b) => {
+					a.push(getFontFaceRules(b));
+					return a;
+				}, [])
 			).then((results) => {
-				return results
-					.map(result => result.value)
-					.join('');
+				return results.map((result) => result.value).join('');
 			});
 			this.#fontFaceRules = await fontFaceRules;
 		}
@@ -400,7 +398,6 @@ export default class extends HTMLElement {
 			});
 		};
 		const clipboardItem = new ClipboardItem({ 'image/png': makeBlob() });
-		navigator.clipboard.write([clipboardItem], { type: 'image/png' })
-			.then(() => console.log('Image copied'));
+		navigator.clipboard.write([clipboardItem], { type: 'image/png' }).then(() => console.log('Image copied'));
 	}
 }

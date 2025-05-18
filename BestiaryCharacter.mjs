@@ -1,13 +1,7 @@
-import { calcCenter } from "./utils.mjs";
+import { calcCenter } from './utils.mjs';
 
 export default class extends HTMLElement {
-	static observedAttributes = [
-		'name',
-		'charactersrc',
-		'guild',
-		'emblemsrc',
-		'emblembgsrc'
-	];
+	static observedAttributes = ['name', 'charactersrc', 'guild', 'emblemsrc', 'emblembgsrc'];
 
 	#emblem;
 	#emblemImg;
@@ -102,12 +96,11 @@ export default class extends HTMLElement {
 		const currentEmblemBgImg = this.#emblemBgImg;
 
 		const appendEmblem = () => {
-			const emblemChanged = Boolean(this.#emblemImg?.src !== currentEmblemImg?.src && this.#emblemBgImg?.src !== currentEmblemBgImg?.src);
+			const emblemChanged = Boolean(
+				this.#emblemImg?.src !== currentEmblemImg?.src && this.#emblemBgImg?.src !== currentEmblemBgImg?.src
+			);
 			const emblemInDOM = Boolean(this.shadowRoot.contains(this.#emblem));
-			if (
-				(emblemChanged || !emblemInDOM)
-				&& this.shadowRoot.getElementById('guild')
-			) {
+			if ((emblemChanged || !emblemInDOM) && this.shadowRoot.getElementById('guild')) {
 				if (this.#emblem) {
 					this.#emblem.remove();
 					this.#emblem = null;
@@ -115,7 +108,9 @@ export default class extends HTMLElement {
 				const newEmblem = this.#createEmblem();
 				if (newEmblem.childElementCount) {
 					this.#emblem = newEmblem;
-					this.shadowRoot.getElementById('guild').insertBefore(this.#emblem, this.shadowRoot.getElementById('guildname'));
+					this.shadowRoot
+						.getElementById('guild')
+						.insertBefore(this.#emblem, this.shadowRoot.getElementById('guildname'));
 				}
 			}
 		};
@@ -143,24 +138,36 @@ export default class extends HTMLElement {
 					appendEmblem();
 				}
 				break;
-			case 'emblemsrc':
+			case 'emblemsrc': {
 				const emblemImg = new Image(15, 15);
 				emblemImg.src = newValue;
 				emblemImg.alt = '';
-				emblemImg.decode()
-					.then(() => this.#emblemImg = emblemImg)
-					.catch(() => this.#emblemImg = null)
+				emblemImg
+					.decode()
+					.then(() => {
+						this.#emblemImg = emblemImg;
+					})
+					.catch(() => {
+						this.#emblemImg = null;
+					})
 					.finally(() => appendEmblem());
 				break;
-			case 'emblembgsrc':
+			}
+			case 'emblembgsrc': {
 				const emblemBgImg = new Image(17, 17);
 				emblemBgImg.src = newValue;
 				emblemBgImg.alt = '';
-				emblemBgImg.decode()
-					.then(() => this.#emblemBgImg = emblemBgImg)
-					.catch(() => this.#emblemBgImg = null)
+				emblemBgImg
+					.decode()
+					.then(() => {
+						this.#emblemBgImg = emblemBgImg;
+					})
+					.catch(() => {
+						this.#emblemBgImg = null;
+					})
 					.finally(() => appendEmblem());
 				break;
+			}
 			default:
 				break;
 		}
@@ -177,9 +184,15 @@ export default class extends HTMLElement {
 		const nameTagWidth = nameTagRect.width / scaleFactor;
 		const nameTagHeight = nameTagRect.height / scaleFactor;
 		const nameTagYPos = 74;
-		tmpl.insertAdjacentHTML('beforeend', `<rect fill="#0a0a0a" opacity="0.8" width="${nameTagWidth}" height="${nameTagHeight}" x="${(this.#rect.width - nameTagWidth) / 2}" y="${nameTagYPos}" rx="4" />`);
-		tmpl.insertAdjacentHTML('beforeend', `<text class="font-system" fill="#fff" font-size="12px" text-anchor="middle" dominant-baseline="hanging" x="${this.#rect.width / 2}" y="${nameTagYPos + 4}">${this.getAttribute('name')}</text>
-		`);
+		tmpl.insertAdjacentHTML(
+			'beforeend',
+			`<rect fill="#0a0a0a" opacity="0.8" width="${nameTagWidth}" height="${nameTagHeight}" x="${(this.#rect.width - nameTagWidth) / 2}" y="${nameTagYPos}" rx="4" />`
+		);
+		tmpl.insertAdjacentHTML(
+			'beforeend',
+			`<text class="font-system" fill="#fff" font-size="12px" text-anchor="middle" dominant-baseline="hanging" x="${this.#rect.width / 2}" y="${nameTagYPos + 4}">${this.getAttribute('name')}</text>
+		`
+		);
 
 		if (this.hasAttribute('guild') && this.shadowRoot.getElementById('guildname')) {
 			const guildTagRect = this.shadowRoot.getElementById('guildname').getBoundingClientRect();
@@ -187,15 +200,27 @@ export default class extends HTMLElement {
 			const guildTagHeight = guildTagRect.height / scaleFactor;
 			const guildTagXPos = (this.#rect.width - guildTagWidth) / 2;
 			const guildTagYPos = nameTagHeight + nameTagYPos + 1;
-			tmpl.insertAdjacentHTML('beforeend', `<rect fill="#0a0a0a" opacity="0.8" width="${guildTagWidth}" height="${guildTagHeight}" x="${guildTagXPos}" y="${guildTagYPos}" rx="4" />`);
-			tmpl.insertAdjacentHTML('beforeend', `<text class="font-system" fill="#fff" font-size="12px" text-anchor="middle" font-weight="700" dominant-baseline="hanging" x="${this.#rect.width / 2}" y="${guildTagYPos + 4}">${this.getAttribute('guild')}</text>`);
+			tmpl.insertAdjacentHTML(
+				'beforeend',
+				`<rect fill="#0a0a0a" opacity="0.8" width="${guildTagWidth}" height="${guildTagHeight}" x="${guildTagXPos}" y="${guildTagYPos}" rx="4" />`
+			);
+			tmpl.insertAdjacentHTML(
+				'beforeend',
+				`<text class="font-system" fill="#fff" font-size="12px" text-anchor="middle" font-weight="700" dominant-baseline="hanging" x="${this.#rect.width / 2}" y="${guildTagYPos + 4}">${this.getAttribute('guild')}</text>`
+			);
 
 			if (this.#emblem) {
 				if (this.#emblemBgImg) {
-					tmpl.insertAdjacentHTML('beforeend', `<image href=${this.#emblemBgImg.src} width="17" height="17" x="${Math.round(guildTagXPos - 18)}" y="${calcCenter(guildTagHeight, 17) + guildTagYPos}" />`);
+					tmpl.insertAdjacentHTML(
+						'beforeend',
+						`<image href=${this.#emblemBgImg.src} width="17" height="17" x="${Math.round(guildTagXPos - 18)}" y="${calcCenter(guildTagHeight, 17) + guildTagYPos}" />`
+					);
 				}
 				if (this.#emblemImg) {
-					tmpl.insertAdjacentHTML('beforeend', `<image href=${this.#emblemImg.src} width="15" height="15" x="${Math.round(guildTagXPos - 17)}" y="${calcCenter(guildTagHeight, 15) + guildTagYPos}" />`);
+					tmpl.insertAdjacentHTML(
+						'beforeend',
+						`<image href=${this.#emblemImg.src} width="15" height="15" x="${Math.round(guildTagXPos - 17)}" y="${calcCenter(guildTagHeight, 15) + guildTagYPos}" />`
+					);
 				}
 			}
 		}

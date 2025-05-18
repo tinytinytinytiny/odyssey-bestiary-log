@@ -1,11 +1,7 @@
-import { calcCenter } from "./utils.mjs";
+import { calcCenter } from './utils.mjs';
 
 export default class extends HTMLElement {
-	static observedAttributes = [
-		'name',
-		'src',
-		'quantity'
-	];
+	static observedAttributes = ['name', 'src', 'quantity'];
 
 	#rect = {
 		width: 147,
@@ -60,7 +56,7 @@ export default class extends HTMLElement {
 
 	attributeChangedCallback(name, _, newValue) {
 		switch (name) {
-			case 'name':
+			case 'name': {
 				const words = newValue.split(' ');
 				const maxLineLength = this.#rect.width;
 				const lines = [];
@@ -110,31 +106,49 @@ export default class extends HTMLElement {
 				const finalLines = lines.slice(0, 4);
 				this.#nameLineCount = finalLines.length;
 				const middleLineNumber = finalLines.length / 2 + 0.5;
-				const text = finalLines.map((line, index) =>
-					`<text x="${this.#rect.width / 2}" y="${this.#rect.height / 2}" dy="${15 * (index + 1 - middleLineNumber)}">${line.join(' ')}</text>`);
+				const text = finalLines.map(
+					(line, index) =>
+						`<text x="${this.#rect.width / 2}" y="${this.#rect.height / 2}" dy="${15 * (index + 1 - middleLineNumber)}">${line.join(' ')}</text>`
+				);
 				this.shadowRoot.getElementById('name').innerHTML = text.join('');
-				this.shadowRoot.getElementById('quantity').setAttribute('dy', Math.min(middleLineNumber * this.#lineMargin, 32));
+				this.shadowRoot
+					.getElementById('quantity')
+					.setAttribute('dy', Math.min(middleLineNumber * this.#lineMargin, 32));
 
 				if (this.shadowRoot.querySelector('#item-img > image')) {
 					const img = this.shadowRoot.querySelector('#item-img > image');
 					const imgHeight = Number(img.getAttribute('height'));
 					const charHeight = 17;
-					img.setAttribute('y', Math.max(0, Math.round(calcCenter(this.#rect.height, imgHeight) - imgHeight / 2 - charHeight / 2 - middleLineNumber * this.#lineMargin)));
+					img.setAttribute(
+						'y',
+						Math.max(
+							0,
+							Math.round(
+								calcCenter(this.#rect.height, imgHeight) -
+									imgHeight / 2 -
+									charHeight / 2 -
+									middleLineNumber * this.#lineMargin
+							)
+						)
+					);
 				}
 
 				break;
+			}
 			case 'quantity':
-				this.shadowRoot.getElementById('quantity').textContent = `${Math.max(parseInt(newValue), 0) || 0}×`;
+				this.shadowRoot.getElementById('quantity').textContent = `${Math.max(Number.parseInt(newValue), 0) || 0}×`;
 				break;
-			case 'src':
+			case 'src': {
 				const img = new Image();
 				img.src = newValue;
 				img.decode().then(() => {
 					const charHeight = 17;
 					const middleLineNumber = this.#nameLineCount / 2 + 0.5;
-					this.shadowRoot.getElementById('item-img').innerHTML = `<image href="${newValue}" width="${img.width}" height="${img.height}" x="${calcCenter(this.#rect.width, img.width)}" y="${Math.max(0, Math.round(calcCenter(this.#rect.height, img.height) - img.height / 2 - charHeight / 2 - middleLineNumber * this.#lineMargin))}" />`;
+					this.shadowRoot.getElementById('item-img').innerHTML =
+						`<image href="${newValue}" width="${img.width}" height="${img.height}" x="${calcCenter(this.#rect.width, img.width)}" y="${Math.max(0, Math.round(calcCenter(this.#rect.height, img.height) - img.height / 2 - charHeight / 2 - middleLineNumber * this.#lineMargin))}" />`;
 				});
 				break;
+			}
 			default:
 				break;
 		}
